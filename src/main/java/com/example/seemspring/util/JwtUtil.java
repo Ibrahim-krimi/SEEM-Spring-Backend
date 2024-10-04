@@ -17,11 +17,12 @@ public String generateToken(String userId){
             .signWith(SignatureAlgorithm.HS256,SECRET) // algo HS256
             .compact(); // et la creation
 }
+//elle renvoie les données (claims) contenues dans le JWT.
 //methode pour Extraiare les information d'un JWT
     public Claims extractTokenClaim(String token){
     return  Jwts.parser()
             .setSigningKey(SECRET)
-            .parseClaimsJwt(token)
+            .parseClaimsJws(token)
             .getBody();
     }
 
@@ -39,6 +40,4 @@ public String generateToken(String userId){
         return false;
     }
     }
-
-
 }
