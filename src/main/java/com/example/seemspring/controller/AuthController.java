@@ -2,6 +2,7 @@ package com.example.seemspring.controller;
 
 import com.example.seemspring.model.User;
 import com.example.seemspring.service.GoogleAuthService;
+import com.example.seemspring.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,9 @@ public class AuthController {
     @Autowired
     private GoogleAuthService googleAuthService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/google")
     public ResponseEntity<?> googleLogin(@RequestBody  Map<String, String> request ) {
             String accesToken = request.get("access_token");
@@ -26,16 +30,17 @@ public class AuthController {
             try{
                 User user = googleAuthService.handleGoogleLogin(accesToken, email);
                 
-                String jwtToken = createJwtToken(user);
+                String jwtToken = jwtUtil.generateToken(user.getId());
                 return ResponseEntity.ok(Map.of("token", jwtToken, "user", user));
                 
             }catch (IllegalArgumentException e){
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
-        
     }
-
+/*
     private String createJwtToken(User user) {
         return "jwt-token-exemple";
     }
+
+ */
 }

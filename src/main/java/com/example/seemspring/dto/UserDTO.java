@@ -1,11 +1,20 @@
 package com.example.seemspring.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+
 import java.util.List;
 
-
+@Data
 public class UserDTO {
+    @Id
+    @NotBlank(message = "ID est obligatoire")
     private String id;
     private String name;
+    @Email(message = "Email invalide")
     private String email;
     private Integer age;
     private String phoneNumber;

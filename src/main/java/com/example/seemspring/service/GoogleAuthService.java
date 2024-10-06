@@ -21,11 +21,11 @@ public class GoogleAuthService {
 
     public User handleGoogleLogin(String accessToken , String email){
         RestTemplate restTemplate = new RestTemplate();
-        String googleUrl = "https://www.googleapis.com/oauth2/v3/tokeninfo?id_token"+accessToken;
+        String googleUrl = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + accessToken;
         try {
-            Map<String, Objects> response = restTemplate.getForObject(googleUrl, Map.class);
+            Map<String, Object> response = restTemplate.getForObject(googleUrl, Map.class);
 
-            if (response!=null && response.get("email").equals(email)){
+            if (response != null && response.get("email").equals(email)) {
                 // token est valide
 
                 User user = userRepository.findByEmail(email);
