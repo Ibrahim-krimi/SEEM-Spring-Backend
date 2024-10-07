@@ -51,7 +51,7 @@ public class UserInformationController {
         }
     }
     @PostMapping("/{id}/photos")
-    public ResponseEntity<?> uploadUserPhotos(@PathVariable String id, @RequestParam("photos") List<MultipartFile> photos, @RequestParam Map<String, Object> updates) {
+    public ResponseEntity<?> FirstConnectionUser(@PathVariable String id, @RequestParam("photos") List<MultipartFile> photos, @RequestParam Map<String, Object> updates) {
         try {
             Map<User, String> userWithMessage = this.bunnyCdnService.uploadUserPhotos(id, photos);
 
@@ -67,12 +67,6 @@ public class UserInformationController {
     }
 
 
-
-
-
-    public ResponseEntity<?> FirstConnectionUser(){
-        return ResponseEntity.ok("success");
-    }
 
 
     public ResponseEntity<?> testApiPhoto(){

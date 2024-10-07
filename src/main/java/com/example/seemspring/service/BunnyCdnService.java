@@ -52,6 +52,7 @@ public class BunnyCdnService {
 
             for (int i = 0; i < files.size(); i++) {
                 String remoteFileName = userId + "-" + System.currentTimeMillis() + "-" + filenames.get(i);
+                remoteFileName = remoteFileName.replaceAll("\\s+", "");
                 try (InputStream inputStream = files.get(i)) {
                     boolean done = ftpClient.storeFile(remoteFileName, inputStream);
                     if (done) {
