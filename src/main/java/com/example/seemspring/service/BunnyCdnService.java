@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -116,5 +117,75 @@ public class BunnyCdnService {
     }
 
 
+    public Map<User, String> uploadAndDeleteUserPhotos(String id, List<MultipartFile> photos, List<String> pathphotoDelete) {
 
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            return Map.of(user,"User not found");
+        }
+
+        if (photos.isEmpty() && pathphotoDelete.isEmpty()) {
+          return   Map.of(user,"pas de photos et pas de path a supprimer");
+        }
+
+        try {
+            if (!photos.isEmpty()) {
+                List<InputStream> fileStreams = new ArrayList<>();
+                List<String> filenames = new ArrayList<>();
+                for (MultipartFile photo : photos) {
+                    fileStreams.add(photo.getInputStream());
+                    filenames.add(photo.getOriginalFilename());
+                }
+
+                uploadFilesAsync(id, fileStreams, filenames)
+                        .thenAccept(uploadedUrls -> {
+                            if (user.getImages() == null) {
+                                user.setImages(new ArrayList<>());
+                            }
+                            user.getImages().addAll(uploadedUrls);
+                            if (user.getImages().size() > 7) {
+                                user.setImages(user.getImages().subList(0, 7)); // Limiter à 7 photos max
+                            }
+                            userRepository.save(user);
+                        });
+            }
+            if (!pathphotoDelete.isEmpty()) {
+                pathphotoDeleteFromBunnyCDN(pathphotoDelete).thenAccept( deleted ->{
+                    if (deleted){
+                     user.getImages().removeIf(pathphotoDelete::contains);
+                     userRepository.save(user);
+                    }
+                });
+            }
+
+
+            return Map.of(user,"L'upload et le suppression sont  en cours, vous serez notifié une fois terminé");
+        } catch (IOException e) {
+            return Map.of(user,e.getMessage());
+        }
+    }
+
+    @Async
+    public CompletableFuture<Boolean> pathphotoDeleteFromBunnyCDN(List<String> pathphotoDelete) {
+        FTPClient client = new FTPClient();
+        return CompletableFuture.supplyAsync(()->{
+      try {
+          client.connect(ftpHost);
+          client.login(ftpUsername, ftpPassword);
+          client.enterLocalPassiveMode();
+          for (String path : pathphotoDelete) {
+              client.deleteFile(path);
+          }
+          client.logout();
+          client.disconnect();
+          return true;
+      } catch (SocketException e) {
+            e.printStackTrace();
+            return false;
+          } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+          }
+        });
+    }
 }

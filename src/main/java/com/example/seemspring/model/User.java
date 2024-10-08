@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data@Document(collection = "users")
@@ -25,4 +26,19 @@ public class User {
     private Boolean emailValid;
     private Boolean phoneNumberValid;
     private  List<String> images;
+
+    //////////////////////////////////////////////////// matching ////////
+
+    private String gender;
+    private String lookingForGenders;
+    //  private Integer minAgePreference;
+    // private Integer maxAgePreference;
+    // private Double locationLatitude;
+    //  private Double locationLongitude;
+    // List<String> matchingIntersts;
+
+    //// Liste de MATCH
+
+    private List<String> matches = new ArrayList<>();
+    private List<String> likes = new ArrayList<>();
 }

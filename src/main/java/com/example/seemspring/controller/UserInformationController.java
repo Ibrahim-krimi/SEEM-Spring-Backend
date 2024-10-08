@@ -50,7 +50,7 @@ public class UserInformationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @PostMapping("/{id}/photos")
+    @PostMapping("/{id}/FirstConnection")
     public ResponseEntity<?> FirstConnectionUser(@PathVariable String id, @RequestParam("photos") List<MultipartFile> photos, @RequestParam Map<String, Object> updates) {
         try {
             Map<User, String> userWithMessage = this.bunnyCdnService.uploadUserPhotos(id, photos);
@@ -66,17 +66,16 @@ public class UserInformationController {
         }
     }
 
+    @PatchMapping("/{id}/updatePhoto")
+    public ResponseEntity<?> updatePhoto(@PathVariable String id,@RequestParam("photos") List<MultipartFile> photos,List<String> PathphotoDelete) {
+        try {
+            Map<User, String> userWithMessage = this.bunnyCdnService.uploadAndDeleteUserPhotos(id, photos,PathphotoDelete);
 
+            return ResponseEntity.ok(userWithMessage);
 
-
-    public ResponseEntity<?> testApiPhoto(){
-        return ResponseEntity.ok("success");
-    }
-
-
-
-    public ResponseEntity<?> updateUserPhoto(){
-        return ResponseEntity.ok("success");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }
