@@ -2,6 +2,8 @@ package com.example.seemspring.service;
 
 import com.example.seemspring.model.User;
 import com.example.seemspring.repository.UserRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,9 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     public UserService(UserRepository userRepository) {
@@ -43,6 +48,33 @@ public class UserService {
 
         User user = userOptional.get();
 
+        // convertitre les champs integer to string ?
+
+
+        // Validation et conversion pour l'âge
+        if (updates.containsKey("age")) {
+            String ageString = updates.get("age").toString();
+            try {
+                int age = Integer.parseInt(ageString); // Convertir en Integer
+                user.setAge(age);
+            } catch (NumberFormatException e) {
+                System.err.println("L'âge fourni n'est pas valide.");
+            }
+        }
+        if (updates.containsKey("interests")) {
+            try {
+                if (updates.get("interests") instanceof String) {
+                    String interestsString = (String) updates.get("interests");
+                    List<String> interests = objectMapper.readValue(interestsString, new TypeReference<List<String>>() {});
+                    user.setInterests(interests);
+                } else if (updates.get("interests") instanceof List) {
+                    user.setInterests((List<String>) updates.get("interests"));
+                }
+            } catch (Exception e) {
+                System.err.println("Les intérêts fournis ne sont pas valides.");
+            }
+        }
+
         // Vérifier les champs et mettre à jour les valeurs si elles existent dans la requête
         if (updates.containsKey("name")) {
             user.setName((String) updates.get("name"));
@@ -50,11 +82,10 @@ public class UserService {
         if (updates.containsKey("email")) {
             user.setEmail((String) updates.get("email"));
         }
-        if (updates.containsKey("age")) {
-            user.setAge((Integer) updates.get("age"));
-        }
+
         if (updates.containsKey("phoneNumber")) {
-            user.setPhoneNumber((String) updates.get("phoneNumber"));
+            String phoneNumber = updates.get("phoneNumber").toString();
+            user.setPhoneNumber(phoneNumber);
         }
         if (updates.containsKey("country")) {
             user.setCountry((String) updates.get("country"));
@@ -65,17 +96,11 @@ public class UserService {
         if (updates.containsKey("bio")) {
             user.setBio((String) updates.get("bio"));
         }
-        if (updates.containsKey("interests")) {
-            user.setInterests((List<String>) updates.get("interests"));
-        }
         if (updates.containsKey("emailValid")) {
             user.setEmailValid((Boolean) updates.get("emailValid"));
         }
         if (updates.containsKey("phoneNumberValid")) {
             user.setPhoneNumberValid((Boolean) updates.get("phoneNumberValid"));
-        }
-        if (updates.containsKey("images")) {
-            user.setImages((List<String>) updates.get("images"));
         }
 
         return userRepository.save(user);

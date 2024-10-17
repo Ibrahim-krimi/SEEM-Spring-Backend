@@ -124,9 +124,7 @@ public class BunnyCdnService {
             return Map.of(user,"User not found");
         }
 
-        if (photos.isEmpty() && pathphotoDelete.isEmpty()) {
-          return   Map.of(user,"pas de photos et pas de path a supprimer");
-        }
+
 
         try {
             if (!photos.isEmpty()) {
@@ -163,6 +161,34 @@ public class BunnyCdnService {
         } catch (IOException e) {
             return Map.of(user,e.getMessage());
         }
+    }
+
+    public CompletableFuture<Map<User, String>> deleteUserPhotos(String id, List<String> pathphotoDelete) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            return CompletableFuture.completedFuture(Map.of(user, "User not found"));
+        }
+
+        if (!pathphotoDelete.isEmpty()) {
+            if (!user.getImages().containsAll(pathphotoDelete)) {
+                return CompletableFuture.completedFuture(Map.of(user, "Certaines photos ne sont pas associées à cet utilisateur"));
+            }
+
+            return pathphotoDeleteFromBunnyCDN(pathphotoDelete).thenApply(deleted -> {
+                if (deleted) {
+                    user.getImages().removeIf(pathphotoDelete::contains);
+                    userRepository.save(user);
+                    return Map.of(user, "Suppression réussie");
+                } else {
+                    return Map.of(user, "Échec de la suppression des photos");
+                }
+            }).exceptionally(ex -> {
+                ex.printStackTrace();
+                return Map.of(user, "Une erreur est survenue lors de la suppression des photos");
+            });
+        }
+
+        return CompletableFuture.completedFuture(Map.of(user, "Aucune photo à supprimer"));
     }
 
     @Async

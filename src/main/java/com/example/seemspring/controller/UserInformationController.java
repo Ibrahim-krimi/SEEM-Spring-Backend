@@ -13,6 +13,7 @@ import org.springframework.web.multipart.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/user")
@@ -53,11 +54,11 @@ public class UserInformationController {
     @PostMapping("/{id}/FirstConnection")
     public ResponseEntity<?> FirstConnectionUser(@PathVariable String id, @RequestParam("photos") List<MultipartFile> photos, @RequestParam Map<String, Object> updates) {
         try {
-            Map<User, String> userWithMessage = this.bunnyCdnService.uploadUserPhotos(id, photos);
-
             User updatedUser = this.userService.updatePartial(id, updates);
 
-            return ResponseEntity.ok(updatedUser);
+            Map<User, String> userWithMessage = this.bunnyCdnService.uploadUserPhotos(id, photos);
+
+            return ResponseEntity.ok(userWithMessage);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -76,6 +77,15 @@ public class UserInformationController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @DeleteMapping("/{id}/updatePhoto")
+    public CompletableFuture<ResponseEntity<Map<User, String>>> deletePhoto(@PathVariable String id, @RequestBody List<String> photourl) {
+        return bunnyCdnService.deleteUserPhotos(id, photourl)
+                .thenApply(result -> ResponseEntity.ok(result))
+                .exceptionally(ex -> {
+                    return ResponseEntity.badRequest().body(Map.<User, String>of(null, "Une erreur est survenue : " + ex.getMessage()));
+                });
     }
 
 }

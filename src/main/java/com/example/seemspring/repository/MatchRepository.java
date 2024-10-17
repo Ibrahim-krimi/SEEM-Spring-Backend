@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface MatchRepository extends MongoRepository<Match, String> {
     public List<Match> findByUserId1OrUserId2(String userId1, String userId2);
+
 }
