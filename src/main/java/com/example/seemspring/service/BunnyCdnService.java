@@ -2,16 +2,15 @@ package com.example.seemspring.service;
 
 import com.example.seemspring.model.User;
 import com.example.seemspring.repository.UserRepository;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -21,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
 
 @Service
 public class BunnyCdnService {
@@ -40,6 +40,9 @@ public class BunnyCdnService {
     @Value("${bunny.pull.zone.url}")
     private String pullZoneUrl;
 
+    //private final RestTemplate restTemplate = new RestTemplate();
+    private final OkHttpClient client = new OkHttpClient();
+
     @Async
     public CompletableFuture<List<String>> uploadFilesAsync(String userId, List<InputStream> files, List<String> filenames) {
         FTPClient ftpClient = new FTPClient();
@@ -52,12 +55,15 @@ public class BunnyCdnService {
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 
             for (int i = 0; i < files.size(); i++) {
-                String remoteFileName = userId + "-" + System.currentTimeMillis() + "-" + filenames.get(i);
+
+                String cleanedFileName = cleanFileName(filenames.get(i));
+                String remoteFileName = "UsersPhotos/" + userId + "-" + System.currentTimeMillis() + "-" + cleanedFileName;
                 remoteFileName = remoteFileName.replaceAll("\\s+", "");
+
                 try (InputStream inputStream = files.get(i)) {
                     boolean done = ftpClient.storeFile(remoteFileName, inputStream);
                     if (done) {
-                        uploadedUrls.add(pullZoneUrl + "/" + remoteFileName);
+                        uploadedUrls.add(pullZoneUrl + "/UsersPhotos/" + remoteFileName);
                     } else {
                         throw new IOException("Failed to upload file: " + filenames.get(i));
                     }
@@ -78,6 +84,7 @@ public class BunnyCdnService {
 
         return CompletableFuture.completedFuture(uploadedUrls);
     }
+
 
 
     public Map<User,String> uploadUserPhotos(String id, List<MultipartFile> photos) {
@@ -110,7 +117,7 @@ public class BunnyCdnService {
                         userRepository.save(user);
                     });
 
-            return Map.of(user,"L'upload est en cours, vous serez notifié une fois terminé");
+            return Map.of(user,"L'upload est en cours");
         } catch (IOException e) {
             return Map.of(user,e.getMessage());
         }
@@ -157,13 +164,13 @@ public class BunnyCdnService {
             }
 
 
-            return Map.of(user,"L'upload et le suppression sont  en cours, vous serez notifié une fois terminé");
+            return Map.of(user,"L'upload et le suppression sont  en cours");
         } catch (IOException e) {
             return Map.of(user,e.getMessage());
         }
     }
 
-    public CompletableFuture<Map<User, String>> deleteUserPhotos(String id, List<String> pathphotoDelete) {
+    /*public CompletableFuture<Map<User, String>> deleteUserPhotos(String id, List<String> pathphotoDelete) {
         User user = userRepository.findById(id).orElse(null);
         if (user == null) {
             return CompletableFuture.completedFuture(Map.of(user, "User not found"));
@@ -190,6 +197,7 @@ public class BunnyCdnService {
 
         return CompletableFuture.completedFuture(Map.of(user, "Aucune photo à supprimer"));
     }
+     */
 
     @Async
     public CompletableFuture<Boolean> pathphotoDeleteFromBunnyCDN(List<String> pathphotoDelete) {
@@ -214,4 +222,49 @@ public class BunnyCdnService {
           }
         });
     }
+
+    @Async
+    public CompletableFuture<Boolean> deletePhoto(String url, String dir) {
+        // URL complète pour supprimer la photo
+        try {
+            String filename = getFileNameFromUrl(url);
+            System.out.println(filename);
+            Request request = new Request.Builder().
+                    url("https://storage.bunnycdn.com/"+this.ftpUsername+"/"+dir+"/"+filename)
+                    .delete(null)
+                    .addHeader("AccessKey",this.ftpPassword)
+                    .build();
+            Response response = client.newCall(request).execute();
+
+            if (response.isSuccessful()) {
+                System.out.println("Photo supprimée avec succès: " + url);
+                return CompletableFuture.completedFuture(true);
+            } else {
+                System.err.println("Erreur lors de la suppression de la photo: " + response.body().string());
+                return CompletableFuture.completedFuture(false);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.completedFuture(false);
+        }
+    }
+
+    public static String getFileNameFromUrl(String url) {
+        String[] parts = url.split("/");
+        return parts[parts.length - 1];
+    }
+    private String cleanFileName(String filename) {
+        String cleanedFileName = filename.replaceAll("[^a-zA-Z0-9\\.\\-]", "");  // Garder les lettres, chiffres, points et tirets
+
+        int extensionIndex = cleanedFileName.lastIndexOf('.');
+        String baseName = (extensionIndex > 0) ? cleanedFileName.substring(0, extensionIndex) : cleanedFileName;
+        String extension = (extensionIndex > 0) ? cleanedFileName.substring(extensionIndex) : "";
+
+        if (baseName.length() > 50) {
+            baseName = baseName.substring(0, 50);
+        }
+
+        return baseName + extension;
+    }
+
 }

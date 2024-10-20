@@ -78,7 +78,7 @@ public class UserInformationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+/*
     @DeleteMapping("/{id}/updatePhoto")
     public CompletableFuture<ResponseEntity<Map<User, String>>> deletePhoto(@PathVariable String id, @RequestBody List<String> photourl) {
         return bunnyCdnService.deleteUserPhotos(id, photourl)
@@ -88,4 +88,27 @@ public class UserInformationController {
                 });
     }
 
+ */
+@DeleteMapping("/{id}/deletePhoto")
+public CompletableFuture<ResponseEntity<?>> deletePhoto(@PathVariable String id, @RequestBody List<String> photoUrls) {
+    List<CompletableFuture<Boolean>> deletionResults = new ArrayList<>();
+
+    for (String photoUrl : photoUrls) {
+        deletionResults.add(bunnyCdnService.deletePhoto(photoUrl, "UsersPhotos"));
+    }
+
+    return CompletableFuture.allOf(deletionResults.toArray(new CompletableFuture[0]))
+            .thenApply(voidResult -> {
+                boolean hasFailure = deletionResults.stream()
+                        .map(CompletableFuture::join)  // Bloquer pour obtenir le résultat des futures
+                        .anyMatch(result -> !result);  // Vérifier si un des résultats est `false`
+
+                if (hasFailure) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Erreur lors de la suppression d'une ou plusieurs photos.");
+                } else {
+                    return ResponseEntity.ok("Photos supprimées avec succès.");
+                }
+            });
+}
 }
