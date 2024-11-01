@@ -16,7 +16,7 @@ public class User {
     private String name;
     private String email;
     //private String googleId;
-    private Integer age;
+    private String age;
     //private String profileImage;
     private String phoneNumber;
     private String country;

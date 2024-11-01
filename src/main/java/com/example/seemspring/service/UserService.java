@@ -54,12 +54,8 @@ public class UserService {
         // Validation et conversion pour l'âge
         if (updates.containsKey("age")) {
             String ageString = updates.get("age").toString();
-            try {
-                int age = Integer.parseInt(ageString); // Convertir en Integer
-                user.setAge(age);
-            } catch (NumberFormatException e) {
-                System.err.println("L'âge fourni n'est pas valide.");
-            }
+            user.setAge(ageString);
+
         }
         if (updates.containsKey("interests")) {
             try {
