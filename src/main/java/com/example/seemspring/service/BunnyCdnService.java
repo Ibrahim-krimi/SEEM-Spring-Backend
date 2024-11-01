@@ -224,7 +224,7 @@ public class BunnyCdnService {
     }
 
     @Async
-    public CompletableFuture<Boolean> deletePhoto(String url, String dir) {
+    public CompletableFuture<Boolean> deletePhoto(String id,String url, String dir) {
         // URL complète pour supprimer la photo
         try {
             String filename = getFileNameFromUrl(url);
@@ -238,6 +238,14 @@ public class BunnyCdnService {
 
             if (response.isSuccessful()) {
                 System.out.println("Photo supprimée avec succès: " + url);
+                User user = this.userRepository.findById(id).orElse(null);
+                if (user != null && user.getImages() != null) {
+                    // Supprimer l'image de la liste des images de l'utilisateur
+                    user.getImages().removeIf(imageUrl -> imageUrl.equals(url));
+
+                    // Sauvegarder les modifications de l'utilisateur
+                    this.userRepository.save(user);
+                }
                 return CompletableFuture.completedFuture(true);
             } else {
                 System.err.println("Erreur lors de la suppression de la photo: " + response.body().string());

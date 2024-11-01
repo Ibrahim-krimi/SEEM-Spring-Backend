@@ -94,7 +94,7 @@ public CompletableFuture<ResponseEntity<?>> deletePhoto(@PathVariable String id,
     List<CompletableFuture<Boolean>> deletionResults = new ArrayList<>();
 
     for (String photoUrl : photoUrls) {
-        deletionResults.add(bunnyCdnService.deletePhoto(photoUrl, "UsersPhotos"));
+        deletionResults.add(bunnyCdnService.deletePhoto(id,photoUrl, "UsersPhotos"));
     }
 
     return CompletableFuture.allOf(deletionResults.toArray(new CompletableFuture[0]))

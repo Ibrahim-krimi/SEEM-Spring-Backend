@@ -28,7 +28,7 @@ public class User {
     private  List<String> images;
 
     //////////////////////////////////////////////////// matching ////////
-
+    private List<String> viewedProfiles;
     private String gender;
     private String lookingForGenders;
     //  private Integer minAgePreference;
@@ -39,6 +39,6 @@ public class User {
 
     //// Liste de MATCH
 
-    private List<String> matches = new ArrayList<>();
-    private List<String> likes = new ArrayList<>();
+    private List<String> likes = new ArrayList<>();    // IDs des utilisateurs likés
+    private List<String> matches = new ArrayList<>();  // IDs des matchs
 }
