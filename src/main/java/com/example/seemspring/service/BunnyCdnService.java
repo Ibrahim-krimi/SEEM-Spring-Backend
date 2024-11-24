@@ -57,7 +57,7 @@ public class BunnyCdnService {
             for (int i = 0; i < files.size(); i++) {
 
                 String cleanedFileName = cleanFileName(filenames.get(i));
-                String remoteFileName = "UsersPhotos/" + userId + "-" + System.currentTimeMillis() + "-" + cleanedFileName;
+                String remoteFileName = userId + "-" + System.currentTimeMillis() + "-" + cleanedFileName;
                 remoteFileName = remoteFileName.replaceAll("\\s+", "");
 
                 try (InputStream inputStream = files.get(i)) {
