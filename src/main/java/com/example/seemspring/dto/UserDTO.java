@@ -16,7 +16,7 @@ public class UserDTO {
     private String name;
     @Email(message = "Email invalide")
     private String email;
-    private Integer age;
+    private String age;
     private String phoneNumber;
     private String country;
     private String city;
