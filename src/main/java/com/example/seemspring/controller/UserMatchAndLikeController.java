@@ -28,7 +28,7 @@ public class UserMatchAndLikeController {
     ResearchProfilesService researchProfilesService;
 
 
-    @GetMapping("/getPorfile")
+    @GetMapping("/getProfiles")
     public ResponseEntity<?> getProfiles(@RequestParam("id") String userid
             , @RequestParam("genre") String genderLokingFor
             , @RequestParam("nombre") int nombredeProfile

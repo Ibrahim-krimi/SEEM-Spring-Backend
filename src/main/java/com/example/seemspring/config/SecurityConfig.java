@@ -22,6 +22,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Désactiver CSRF (surtout pour les API REST)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/google","/**").permitAll()
+                        .requestMatchers("/api/auth/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
 

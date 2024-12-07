@@ -24,69 +24,56 @@ public class ResearchProfilesService {
 
 
 
-    @Async
     public List<User> getRandomUserByGenderWithInterst(String id, String gender, Integer Nombredeprofile) {
-        // Récupérer l'utilisateur actuel par ID
+
         User currentUser = userRepository.findById(id).orElse(null);
         if (currentUser == null) {
             throw new IllegalArgumentException("User not found");
         }
 
-        // Récupérer les profils déjà vus
-        List<String> viewedProfiles = currentUser.getViewedProfiles();
-        if (viewedProfiles == null) {
-            viewedProfiles = Collections.emptyList(); // si la liste est vide
-        }
-
-        // Récupérer les intérêts de l'utilisateur actuel
         List<String> currentUserInterests = currentUser.getInterests();
         if (currentUserInterests == null) {
-            currentUserInterests = Collections.emptyList(); // si pas d'intérêts
+            currentUserInterests = Collections.emptyList(); // Si pas d'intérêts
         }
 
-        // Première requête : chercher des utilisateurs qui partagent des intérêts et qui ne sont pas encore vus
         Query queryWithSharedInterests = new Query();
-        queryWithSharedInterests.addCriteria(Criteria.where("gender").is(gender));
-        queryWithSharedInterests.addCriteria(Criteria.where("id").ne(id)); // Exclure l'utilisateur lui-même
-        queryWithSharedInterests.addCriteria(Criteria.where("id").nin(viewedProfiles)); // Exclure les utilisateurs déjà vus
-        if (!currentUserInterests.isEmpty()) {
-            queryWithSharedInterests.addCriteria(Criteria.where("interests").in(currentUserInterests)); // Critère d'intérêts partagés
+
+        if (gender != null && !gender.isEmpty()) {
+            queryWithSharedInterests.addCriteria(Criteria.where("gender").is(gender));
         }
 
-        // Rechercher les utilisateurs avec des intérêts communs
+        queryWithSharedInterests.addCriteria(Criteria.where("id").ne(id)); // Exclure l'utilisateur lui-même
+
+        if (!currentUserInterests.isEmpty()) {
+            queryWithSharedInterests.addCriteria(Criteria.where("interests").in(currentUserInterests));
+        }
+
         List<User> usersWithSharedInterests = mongoTemplate.find(queryWithSharedInterests, User.class);
 
-        // Compléter avec d'autres utilisateurs si nécessaire (sans contrainte d'intérêts)
         if (usersWithSharedInterests.size() < Nombredeprofile) {
             Query queryWithoutSharedInterests = new Query();
-            queryWithoutSharedInterests.addCriteria(Criteria.where("gender").is(gender));
+
+            if (gender != null && !gender.isEmpty()) {
+                queryWithoutSharedInterests.addCriteria(Criteria.where("gender").is(gender));
+            }
+
             queryWithoutSharedInterests.addCriteria(Criteria.where("id").ne(id)); // Exclure l'utilisateur lui-même
-            queryWithoutSharedInterests.addCriteria(Criteria.where("id").nin(viewedProfiles)); // Exclure les utilisateurs déjà vus
             queryWithoutSharedInterests.addCriteria(Criteria.where("interests").nin(currentUserInterests)); // Exclure les intérêts déjà cherchés
 
-            // Rechercher des utilisateurs sans intérêt partagé
             List<User> otherUsers = mongoTemplate.find(queryWithoutSharedInterests, User.class);
 
-            // Ajouter les autres utilisateurs pour compléter la liste
             usersWithSharedInterests.addAll(otherUsers);
         }
 
-        // Mélanger la liste finale des utilisateurs
         Collections.shuffle(usersWithSharedInterests);
 
-        // Limiter le nombre d'utilisateurs retournés
-        List<User> usersToReturn = usersWithSharedInterests.size() > Nombredeprofile ? usersWithSharedInterests.subList(0, Nombredeprofile) : usersWithSharedInterests;
+        List<User> usersToReturn = usersWithSharedInterests.size() > Nombredeprofile
+                ? usersWithSharedInterests.subList(0, Nombredeprofile)
+                : usersWithSharedInterests;
 
-        // Ajouter les utilisateurs vus à la liste des profils déjà vus
-        List<String> newViewedProfiles = usersToReturn.stream().map(User::getId).toList();
-        currentUser.getViewedProfiles().addAll(newViewedProfiles);
-
-        // Sauvegarder les modifications
-        userRepository.save(currentUser);
-
-        // Retourner la liste des utilisateurs à afficher
-        return usersToReturn.isEmpty() ? null : usersToReturn;
+        return usersToReturn;
     }
+
 
 
       /*
