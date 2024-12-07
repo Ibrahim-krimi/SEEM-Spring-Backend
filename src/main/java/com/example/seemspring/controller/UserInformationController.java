@@ -1,11 +1,13 @@
 package com.example.seemspring.controller;
 
+import com.example.seemspring.dto.UserUpdateDTO;
 import com.example.seemspring.model.User;
 import com.example.seemspring.service.BunnyCdnService;
 import com.example.seemspring.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.repository.Update;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.*;
@@ -37,8 +39,8 @@ public class UserInformationController {
         }
     }
     @PatchMapping("/updateUserInformation")
-    public ResponseEntity<?> updateUserInformation(@RequestBody Map<String, Object> updates) {
-        String userId = (String) updates.get("id");
+    public ResponseEntity<?> updateUserInformation(@RequestBody UserUpdateDTO updates) {
+        String userId =  updates.getId();
 
         if (userId == null) {
             return ResponseEntity.badRequest().body("L'ID de l'utilisateur est obligatoire");
@@ -51,8 +53,9 @@ public class UserInformationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @PostMapping("/{id}/FirstConnection")
-    public ResponseEntity<?> FirstConnectionUser(@PathVariable String id, @RequestParam("photos") List<MultipartFile> photos, @RequestParam Map<String, Object> updates) {
+    @PostMapping(value = "/{id}/FirstConnection", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> FirstConnectionUser(@PathVariable String id, @RequestPart("photos") List<MultipartFile> photos,        @RequestPart("updates") UserUpdateDTO updates // JSON pour UserUpdateDTO
+    ) {
         try {
             User updatedUser = this.userService.updatePartial(id, updates);
 
