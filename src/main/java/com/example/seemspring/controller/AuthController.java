@@ -30,7 +30,7 @@ public class AuthController {
             try{
                 User user = googleAuthService.handleGoogleLogin(accesToken, email);
                 
-                String jwtToken = jwtUtil.generateToken(user.getId());
+                String jwtToken = jwtUtil.generateToken(user.getId(), "ROLE_USER");
                 return ResponseEntity.ok(Map.of("token", jwtToken, "user", user));
                 
             }catch (IllegalArgumentException e){

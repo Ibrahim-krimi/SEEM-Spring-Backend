@@ -24,10 +24,18 @@ public class AdminService {
 
     public Optional<Admin> authenticateAdmin(String email, String password) {
         Optional<Admin> admin = adminRepository.findByUsername(email);
-        if (admin.isPresent() && passwordEncoder.matches(password, admin.get().getPassword())) {
+        if (admin.isPresent() && admin.get().getPassword().equals(password)) {
             return admin;
         }
         return Optional.empty();
+    }
+
+    public Boolean createUser(String email, String password){
+        Admin admin = new Admin();
+        admin.setUsername(email);
+        admin.setPassword(password);
+        adminRepository.save(admin);
+        return true;
     }
 
     public Admin findByid(String id) {

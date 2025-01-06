@@ -54,6 +54,10 @@ public class UserService {
             user.setName(updates.getName());
         }
 
+        if (updates.getGender() != null){
+            user.setGender(updates.getGender());
+        }
+
         if (updates.getEmail() != null) {
             user.setEmail(updates.getEmail());
         }
@@ -87,6 +91,8 @@ public class UserService {
             user.setPhoneNumberValid(updates.getPhoneNumberValid());
         }
 
+        user.setBlocked(false);
+
         // Gestion des intérêts (conversion JSON ou liste brute)
         if (updates.getInterests() != null) {
             try {
@@ -111,4 +117,20 @@ public class UserService {
         return userRepository.save(user);
     }
 
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+
+    public boolean updateUserBlockedStatus(String email, Boolean isBlocked) {
+        User user = userRepository.findByEmail(email);
+        if (user == null){
+            return false;
+        }
+
+        user.setBlocked(isBlocked);
+        userRepository.save(user);
+        return true;
+    }
 }

@@ -17,6 +17,7 @@ public class UserUpdateDTO {
     private Boolean phoneNumberValid; // Champ pour valider le numéro de téléphone
     private String phoneNumber;
     private List<String> interests;
+    private String gender;
 
     // Getters et Setters
 }

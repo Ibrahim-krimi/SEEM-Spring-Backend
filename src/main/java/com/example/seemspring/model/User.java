@@ -26,6 +26,7 @@ public class User {
     private Boolean emailValid;
     private Boolean phoneNumberValid;
     private  List<String> images;
+    private boolean isBlocked;
 
     //////////////////////////////////////////////////// matching ////////
     private List<String> viewedProfiles;

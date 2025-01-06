@@ -114,4 +114,7 @@ public CompletableFuture<ResponseEntity<?>> deletePhoto(@PathVariable String id,
                 }
             });
 }
+
+
+
 }
